@@ -37,13 +37,16 @@ import javax.validation.Valid;
 @Controller
 class VisitController {
 
+	private final OwnerRepository owners;
+
 	private final VisitRepository visits;
 
 	private final PetRepository pets;
 
 	private final VetRepository vets;
 
-	public VisitController(VisitRepository visits, PetRepository pets, VetRepository vets) {
+	public VisitController(OwnerRepository owners, VisitRepository visits, PetRepository pets, VetRepository vets) {
+		this.owners = owners;
 		this.visits = visits;
 		this.pets = pets;
 		this.vets = vets;
@@ -94,10 +97,14 @@ class VisitController {
 	}
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/visits/edit/{visitId}")
-	public String initEditVisitForm(@PathVariable("visitId") int visitId, ModelMap model) {
+	public String initEditVisitForm(@PathVariable("visitId") int visitId,
+									@PathVariable("ownerId") int ownerId,
+									ModelMap model) {
+		Owner owner = owners.findById(ownerId);
 		Visit visit = visits.findById(visitId);
 		model.put("visit", visit);
 		model.put("method", "put");
+		model.put("petList", owner.getPets());
 		return "pets/createOrUpdateVisitForm";
 	}
 
@@ -115,7 +122,7 @@ class VisitController {
 	}
 
 	@GetMapping("/owners/{ownerId}/pets/{petId}/visits/change/{visitId}")
-	public String deactivationVisitForm(@PathVariable("visitId") int visitId){
+	public String deactivationVisitForm(@PathVariable("visitId") int visitId) {
 		Visit visit = this.visits.findById(visitId);
 		visit.setActive(!visit.getActive());
 		this.visits.save(visit);
